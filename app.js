@@ -37,9 +37,13 @@ const posts = [
 const httpRequestListener = function (request, response) {
   const { url, method } = request;
   if (method === "GET") {
-    if (url === "/ping") {
+    if (url === "/get_users") {
       response.writeHead(200, { "Content-Type": "application/json" });
-      response.end(JSON.stringify({ message: "pong" }));
+      response.end(JSON.stringify({ message: users }));
+    }
+    if (url === "/get_posts") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: posts }));
     }
   } else if (method === "POST") {
     // (3)
@@ -63,6 +67,28 @@ const httpRequestListener = function (request, response) {
         });
 
         response.end(JSON.stringify({ message: "userCreated" })); // (9)
+      });
+    }
+    if (url === "/posts") {
+      let body = ""; // (4)
+      request.on("data", (data) => {
+        body += data;
+      }); // (5)
+
+      // stream을 전부 받아온 이후에 실행
+      request.on("end", () => {
+        // (6)
+        const post = JSON.parse(body); //(7)
+
+        posts.push({
+          // (8)
+          id: post.id,
+          title: post.title,
+          description: post.description,
+          userId: post.userId,
+        });
+
+        response.end(JSON.stringify({ message: "postCreated" })); // (9)
       });
     }
   }
